@@ -17,6 +17,7 @@
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
+            transition: padding 0.3s ease; /* For smooth transition if body padding changes */
         }
 
         /* Main container for the application */
@@ -28,6 +29,7 @@
             width: 90%;
             max-width: 700px; /* Max width for better readability */
             text-align: center;
+            transition: all 0.3s ease; /* Smooth transition for container changes */
         }
 
         h1 {
@@ -69,16 +71,24 @@
         }
 
         /* Image preview styling */
-        .image-preview-container,
-        .output-container {
+        .image-preview-container {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #dee2e6;
         }
+        
+        .output-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            /* display: none; Initially hidden by inline style */
+        }
+
 
         .image-preview-container p,
-        .output-container p {
+        .output-container p { /* Style for labels within these containers */
             font-weight: bold;
             margin-top: 0;
             margin-bottom: 10px;
@@ -136,6 +146,14 @@
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Blue glow on focus */
             outline: none;
         }
+        
+        .controls input[type="checkbox"] {
+            width: 20px; /* Specific width for checkbox */
+            height: 20px; /* Specific height for checkbox */
+            margin-top: 5px; /* Align with label if needed */
+            accent-color: #007bff; /* Modern way to color checkboxes */
+        }
+
 
         /* Button styling */
         .controls button {
@@ -164,17 +182,18 @@
         #asciiOutput {
             font-family: 'Courier New', Courier, monospace; /* Monospace font for ASCII */
             white-space: pre; /* Preserve whitespace and newlines */
-            overflow-x: auto; /* Allow horizontal scrolling for wide art */
+            overflow: auto; /* Changed from overflow-x to auto for both directions */
             background-color: #1e1e1e; /* Dark background for ASCII */
             color: #d4d4d4; /* Light gray text for ASCII */
             padding: 15px;
             border-radius: 8px; /* Rounded corners */
             border: 1px solid #333; /* Dark border */
-            line-height: 1.0; /* Adjust for character density */
-            letter-spacing: 0px; /* Adjust for character density */
-            font-size: 8px; /* Can be small for detailed ASCII */
+            line-height: 1.0; 
+            letter-spacing: 0px; 
+            font-size: 8px; 
             min-height: 100px;
-            text-align: left; /* Align text to the left for pre */
+            text-align: left; 
+            box-sizing: border-box;
         }
 
         /* Message box for alerts */
@@ -188,7 +207,7 @@
             padding: 10px 20px;
             border-radius: 6px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            z-index: 1000;
+            z-index: 10000; /* Ensure it's above fullscreen button */
             opacity: 0;
             transition: opacity 0.5s ease-in-out, top 0.5s ease-in-out;
             visibility: hidden;
@@ -207,21 +226,97 @@
         /* Responsive adjustments */
         @media (min-width: 600px) {
             .controls {
-                flex-direction: row; /* Align controls in a row on larger screens */
-                align-items: flex-end; /* Align items to the bottom */
-                justify-content: space-between; /* Space out elements */
+                flex-direction: row; 
+                align-items: flex-end; 
+                justify-content: space-between; 
             }
             .control-group {
-                flex-grow: 1; /* Allow input groups to grow */
+                flex-grow: 1; 
             }
-            .control-group:last-of-type { /* The button group */
+            .control-group:last-of-type { 
                 flex-grow: 0;
             }
+             .control-group label[for="invertColorsCheckbox"] { 
+                margin-bottom: 10px; 
+            }
             .controls button {
-                width: auto; /* Button width auto on larger screens */
+                width: auto; 
                 white-space: nowrap;
             }
         }
+
+        /* --- Fullscreen Mode Styles --- */
+        #closeFullscreenButton {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            padding: 10px 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 9999; /* High z-index */
+            display: none; /* Hidden by default */
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        body.output-fullscreen-mode #closeFullscreenButton {
+            display: block;
+        }
+        
+        body.output-fullscreen-mode {
+            padding: 0; /* Remove body padding in fullscreen */
+            overflow: hidden; /* Prevent body scrollbars when content fits */
+        }
+
+        body.output-fullscreen-mode .container {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            padding: 0;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex; 
+            flex-direction: column;
+            background-color: #1e1e1e; /* Match ASCII output bg for seamless look */
+        }
+
+        body.output-fullscreen-mode .output-container {
+            flex-grow: 1; 
+            width: 100%;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background-color: #1e1e1e; /* Match ASCII bg */
+            display: flex !important; 
+            flex-direction: column; /* To make #asciiOutput grow */
+        }
+        
+        body.output-fullscreen-mode .output-container > p { /* Hide "Generated ASCII Art:" label */
+            display: none;
+        }
+
+        body.output-fullscreen-mode #asciiOutput {
+            flex-grow: 1; /* Allows #asciiOutput to fill the .output-container */
+            width: 100%;
+            height: 100%; /* Let flexbox manage height effectively */
+            font-size: 8px; 
+            line-height: 1.0; 
+            padding: 10px; /* Small padding inside the art view */
+            border: none;
+            border-radius: 0;
+        }
+
+        /* Hide other elements when in fullscreen mode */
+        body.output-fullscreen-mode > .container > h1,
+        body.output-fullscreen-mode > .container > p:first-of-type, /* "Made by..." */
+        body.output-fullscreen-mode > .container > #pasteArea,
+        body.output-fullscreen-mode > .container > .controls-preview-wrapper {
+            display: none;
+        }
+
     </style>
 </head>
 <body>
@@ -243,7 +338,7 @@
             <div class="controls">
                 <div class="control-group">
                     <label for="resolutionInput">ASCII Width (characters):</label>
-                    <input type="number" id="resolutionInput" value="100" min="10" max="500" step="10">
+                    <input type="number" id="resolutionInput" value="100" min="10" max="2000" step="10">
                 </div>
                 <div class="control-group">
                     <label for="charSetSelect">Character Set:</label>
@@ -256,7 +351,7 @@
                 </div>
                  <div class="control-group">
                     <label for="invertColorsCheckbox">Invert Colors:</label>
-                    <input type="checkbox" id="invertColorsCheckbox" style="width: auto; height: auto; margin-top: 5px;">
+                    <input type="checkbox" id="invertColorsCheckbox">
                 </div>
                 <button id="convertToAsciiButton" aria-label="Convert to ASCII">Convert to ASCII</button>
             </div>
@@ -269,6 +364,7 @@
     </div>
 
     <div id="customAlertBox" class="message-box"></div>
+    <button id="closeFullscreenButton">Exit Fullscreen</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -277,7 +373,6 @@
             const pastedImage = document.getElementById('pastedImage');
             const imagePreviewContainer = document.getElementById('imagePreviewContainer');
             const imageCanvas = document.getElementById('imageCanvas');
-            // Get 2D context, willReadFrequently hint can improve performance for repeated getImageData calls
             const canvasContext = imageCanvas.getContext('2d', { willReadFrequently: true });
             const asciiOutput = document.getElementById('asciiOutput');
             const outputContainer = document.getElementById('outputContainer');
@@ -286,68 +381,75 @@
             const charSetSelect = document.getElementById('charSetSelect');
             const invertColorsCheckbox = document.getElementById('invertColorsCheckbox');
             const customAlertBox = document.getElementById('customAlertBox');
+            const closeFullscreenButton = document.getElementById('closeFullscreenButton'); // Added
 
-            // ASCII Character Ramps: Define different sets of characters for ASCII conversion
-            // These are defined from visually lightest to visually darkest representation.
             const charRamps = {
-                complex:    `$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^'.\` `.split("").reverse().join(""),
-                simple:     ` .:-=+*#%@`.split("").reverse().join(""),
-                blocks:     ` █▇▆▅▄▃▂ `.split("").reverse().join(""), // Space is lightest, full block is darkest
-                binary:     ` 01` // Space, 0, then 1
+                complex:    ` .'\`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$`,
+                simple:     ` .:-=+*#%@`,
+                blocks:     ` ▇▆▅▄▃▂█`, 
+                binary:     ` 01`      
             };
-            let currentAsciiChars = charRamps.complex; // Default character set
+            let currentAsciiChars = charRamps.complex; 
 
-            // --- Utility Functions ---
-            /**
-             * Displays a custom message (alert) to the user.
-             * @param {string} message - The message to display.
-             * @param {string} type - 'error' or 'success' to style the message box.
-             */
             function showMessage(message, type = 'error') {
                 customAlertBox.textContent = message;
-                customAlertBox.className = 'message-box'; // Reset classes
+                customAlertBox.className = 'message-box'; 
                 customAlertBox.classList.add(type);
                 customAlertBox.classList.add('show');
-                // Hide the message box after 3 seconds
                 setTimeout(() => {
                     customAlertBox.classList.remove('show');
                 }, 3000);
             }
+            
+            function exitFullscreenMode() {
+                if (document.body.classList.contains('output-fullscreen-mode')) {
+                    document.body.classList.remove('output-fullscreen-mode');
+                    // outputContainer visibility is handled by its own inline style or previous state
+                }
+            }
 
-            // --- Event Listeners ---
             pasteArea.addEventListener('paste', handlePaste);
-            // Add focus visible class for accessibility styling if needed (not strictly used here)
-            pasteArea.addEventListener('focus', () => pasteArea.classList.add('focus-visible'));
-            pasteArea.addEventListener('blur', () => pasteArea.classList.remove('focus-visible'));
+            pasteArea.addEventListener('focus', () => {
+                pasteArea.classList.add('focus-visible');
+                 if (pasteArea.textContent === "Paste your image here") {
+                    pasteArea.textContent = ""; 
+                }
+            });
+            pasteArea.addEventListener('blur', () => {
+                pasteArea.classList.remove('focus-visible');
+                if (pasteArea.textContent.trim() === "") {
+                    pasteArea.textContent = "Paste your image here"; 
+                }
+            });
+
 
             convertToAsciiButton.addEventListener('click', processImageToAscii);
             charSetSelect.addEventListener('change', updateCharSet);
+            closeFullscreenButton.addEventListener('click', () => {
+                exitFullscreenMode();
+                // Ensure output container is still visible in normal mode if it has content
+                if(asciiOutput.textContent) {
+                     outputContainer.style.display = 'block';
+                } else {
+                     outputContainer.style.display = 'none';
+                }
+            });
 
-            updateCharSet(); // Initialize the character set on load
 
-            // --- Core Functions ---
+            updateCharSet(); 
 
-            /**
-             * Updates the current ASCII character set based on user selection.
-             */
             function updateCharSet() {
                 const selectedSet = charSetSelect.value;
                 currentAsciiChars = charRamps[selectedSet];
             }
 
-            /**
-             * Handles the paste event to get image data from the clipboard.
-             * @param {ClipboardEvent} event - The paste event.
-             */
             function handlePaste(event) {
-                // Immediately prevent the default paste action (e.g., pasting rich text or filename)
-                // into the contenteditable div. We want to handle the data ourselves.
                 event.preventDefault();
+                exitFullscreenMode(); // Exit fullscreen if a new image is pasted
 
-                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                const items = (event.clipboardData || window.clipboardData || event.originalEvent.clipboardData).items;
                 let imageFile = null;
 
-                // Check if clipboard items are accessible
                 if (!items) {
                     showMessage('Clipboard data is not accessible.', 'error');
                     pasteArea.innerHTML = 'Could not access clipboard. Try again or check browser permissions.';
@@ -355,13 +457,12 @@
                     return;
                 }
 
-                // Iterate through clipboard items to find an image
                 for (let i = 0; i < items.length; i++) {
                     if (items[i].type.indexOf('image') !== -1) {
                         const file = items[i].getAsFile();
-                        if (file) { // Ensure getAsFile() returned a non-null File object
+                        if (file) { 
                            imageFile = file;
-                           break; // Found an image file
+                           break; 
                         }
                     }
                 }
@@ -369,67 +470,57 @@
                 if (imageFile) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        // Display the pasted image
                         pastedImage.src = e.target.result;
                         pastedImage.style.display = 'block';
                         imagePreviewContainer.style.display = 'block';
                         
-                        // Clear the paste area and provide feedback
                         pasteArea.innerHTML = 'Image pasted! Adjust settings and click "Convert".';
                         pasteArea.classList.add('pasted');
                         
-                        outputContainer.style.display = 'none'; // Hide previous results
-                        asciiOutput.textContent = ''; // Clear previous ASCII art
+                        outputContainer.style.display = 'none'; 
+                        asciiOutput.textContent = ''; 
                         showMessage('Image successfully pasted and ready for conversion.', 'success');
                     };
                     reader.onerror = function() {
+                        exitFullscreenMode(); // Also exit on error
                         showMessage('Error: Could not read the pasted image file. It might be corrupted or an unsupported format.', 'error');
                         pasteArea.innerHTML = 'Error reading image. Please try pasting a different image.';
                         pasteArea.classList.remove('pasted');
-                        // Hide image preview elements on error
                         pastedImage.style.display = 'none';
-                        pastedImage.src = "#"; // Reset src
+                        pastedImage.src = "#"; 
                         imagePreviewContainer.style.display = 'none';
                     };
-                    reader.readAsDataURL(imageFile); // Read the image file as a data URL
+                    reader.readAsDataURL(imageFile); 
                 } else {
-                    // No image file was successfully retrieved from clipboard items
+                    exitFullscreenMode(); // Also exit if no image found
                     showMessage('No image found in the clipboard. Please copy an image and then paste it here.', 'error');
                     pasteArea.innerHTML = 'No image detected in paste. Copy an image first, then paste here.';
                     pasteArea.classList.remove('pasted');
-                    // Optionally hide preview if a previous image was there and this paste failed
-                    // pastedImage.style.display = 'none';
-                    // pastedImage.src = "#";
-                    // imagePreviewContainer.style.display = 'none';
                 }
             }
 
-            /**
-             * Processes the pasted image and converts it to ASCII art.
-             */
             function processImageToAscii() {
-                // Check if an image has been pasted and is visible
                 if (!pastedImage.src || pastedImage.src.startsWith('#') || pastedImage.style.display === 'none') {
+                    exitFullscreenMode();
                     showMessage('Please paste an image first.', 'error');
                     return;
                 }
 
                 const desiredWidth = parseInt(resolutionInput.value, 10);
-                // Validate the resolution input
-                if (isNaN(desiredWidth) || desiredWidth < 10 || desiredWidth > 1000) { // Max width increased in previous thought, keep it
-                    showMessage('Please enter a valid resolution (10-1000).', 'error');
+                if (isNaN(desiredWidth) || desiredWidth < 10 || desiredWidth > 2000) { 
+                    exitFullscreenMode();
+                    showMessage('Please enter a valid resolution (10-2000).', 'error');
                     return;
                 }
 
                 const img = new Image();
                 img.onload = () => {
-                    // Character aspect ratio adjustment.
-                    const charAspectRatio = 0.55;
-
+                    const charAspectRatio = 0.55; 
                     const naturalAspectRatio = img.naturalHeight / img.naturalWidth;
                     const desiredHeight = Math.round(desiredWidth * naturalAspectRatio * charAspectRatio);
 
                     if (desiredHeight <= 0) {
+                        exitFullscreenMode();
                         showMessage('Calculated height is too small. Try a larger width or a different image.', 'error');
                         return;
                     }
@@ -437,67 +528,62 @@
                     imageCanvas.width = desiredWidth;
                     imageCanvas.height = desiredHeight;
 
-                    // Clear the canvas and draw the scaled-down image
                     canvasContext.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
                     canvasContext.drawImage(img, 0, 0, imageCanvas.width, imageCanvas.height);
 
                     try {
-                        // Get pixel data from the canvas
                         const imageData = canvasContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
-                        const data = imageData.data; // This is a flat array: [R,G,B,A, R,G,B,A, ...]
+                        const data = imageData.data; 
                         let asciiString = "";
                         const invert = invertColorsCheckbox.checked;
 
-                        // Iterate over the scaled image's "pixels" (sampling points)
                         for (let y = 0; y < imageCanvas.height; y++) {
                             for (let x = 0; x < imageCanvas.width; x++) {
-                                const index = (y * imageCanvas.width + x) * 4; // Calculate index in the flat pixel array
+                                const index = (y * imageCanvas.width + x) * 4; 
                                 const r = data[index];
                                 const g = data[index + 1];
                                 const b = data[index + 2];
-                                // const a = data[index + 3]; // Alpha channel, not used for brightness
-
-                                // Calculate grayscale brightness (Luminosity method)
+                                
                                 let brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b);
 
-                                // Invert brightness if the checkbox is checked
                                 if (invert) {
                                     brightness = 255 - brightness;
                                 }
 
-                                // Map brightness (0-255) to an index in the current ASCII character ramp
                                 const charIndex = Math.min(
                                     Math.floor((brightness / 255) * currentAsciiChars.length),
-                                    currentAsciiChars.length - 1 // Ensure index is within bounds
+                                    currentAsciiChars.length - 1 
                                 );
                                 asciiString += currentAsciiChars[charIndex];
                             }
-                            asciiString += '\n'; // Add a newline character at the end of each row
+                            asciiString += '\n'; 
                         }
-                        asciiOutput.textContent = asciiString; // Display the generated ASCII string
-                        outputContainer.style.display = 'block'; // Show the output container
+                        asciiOutput.textContent = asciiString; 
                         showMessage('ASCII art generated successfully!', 'success');
+                        
+                        // Enter fullscreen mode
+                        document.body.classList.add('output-fullscreen-mode');
+                        outputContainer.style.display = 'flex'; // Ensure visible and uses flex for fullscreen
+
                     } catch (error) {
-                        // Handle potential errors from getImageData (e.g., tainted canvas)
+                        exitFullscreenMode(); 
                         console.error("Error getting image data: ", error);
                         showMessage(`Error processing image: ${error.message}. This can happen if the source image is tainted (e.g. from a different domain and loaded without CORS). Try a smaller image or one from your computer.`, 'error');
-                        outputContainer.style.display = 'none';
+                        outputContainer.style.display = 'none'; 
                     }
                 };
                 img.onerror = () => {
-                    // Handle errors if the image itself fails to load
+                    exitFullscreenMode();
                     showMessage('Error loading the pasted image for processing. It might be an invalid image format or too large.', 'error');
                     pastedImage.style.display = 'none';
-                    pastedImage.src = "#"; // Reset src
+                    pastedImage.src = "#"; 
                     imagePreviewContainer.style.display = 'none';
                     pasteArea.innerHTML = 'Error loading image. Paste a new one.';
                     pasteArea.classList.remove('pasted');
                 }
-                // Set the source of the Image object to the Data URL of the pasted image.
                 img.src = pastedImage.src;
             }
         });
     </script>
 </body>
 </html>
-
