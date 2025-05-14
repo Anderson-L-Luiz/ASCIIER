@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to ASCII Art Converter</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5; /* Light gray background */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Main container for the application */
+        .container {
+            background-color: #ffffff; /* White background for the container */
+            padding: 25px;
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            width: 90%;
+            max-width: 700px; /* Max width for better readability */
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a73e8; /* A nice blue for the heading */
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        /* Styling for the area where users paste images */
+        .paste-area {
+            border: 3px dashed #007bff; /* Blue dashed border */
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 120px; /* Minimum height */
+            cursor: text;
+            border-radius: 8px; /* Rounded corners */
+            background-color: #f8f9fa; /* Very light gray for paste area */
+            color: #6c757d; /* Gray text color */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .paste-area:focus,
+        .paste-area.pasted {
+            border-color: #28a745; /* Green border when focused or pasted */
+            background-color: #e9f5ee; /* Light green background */
+            outline: none;
+        }
+
+        /* Container for image preview and controls */
+        .controls-preview-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Space between elements */
+            margin-bottom: 25px;
+        }
+
+        /* Image preview styling */
+        .image-preview-container,
+        .output-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .image-preview-container p,
+        .output-container p {
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #495057; /* Darker gray for labels */
+        }
+
+        #pastedImage {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 6px; /* Rounded corners for the image */
+            border: 1px solid #ced4da; /* Light border for the image */
+        }
+
+        /* Styling for control elements */
+        .controls {
+            display: flex;
+            flex-direction: column; /* Stack controls vertically on small screens */
+            gap: 15px; /* Space between control elements */
+            align-items: stretch; /* Make controls take full width */
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column; /* Label above input */
+            align-items: flex-start; /* Align label to the left */
+            gap: 5px;
+        }
+
+        .controls label {
+            font-weight: 600; /* Slightly bolder labels */
+            color: #495057;
+            font-size: 0.95em;
+        }
+
+        .controls input[type="number"],
+        .controls select {
+            padding: 10px 12px;
+            border: 1px solid #ced4da; /* Standard border */
+            border-radius: 6px; /* Rounded corners for inputs */
+            font-size: 1em;
+            width: 100%; /* Full width input */
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .controls input[type="number"]:focus,
+        .controls select:focus {
+            border-color: #007bff; /* Blue border on focus */
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Blue glow on focus */
+            outline: none;
+        }
+
+        /* Button styling */
+        .controls button {
+            padding: 12px 20px;
+            background-color: #007bff; /* Primary blue */
+            color: white;
+            border: none;
+            border-radius: 6px; /* Rounded corners for button */
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 500;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        .controls button:active {
+            background-color: #004085; /* Even darker blue when pressed */
+            transform: translateY(1px); /* Slight press effect */
+        }
+
+
+        /* Styling for the ASCII output area */
+        #asciiOutput {
+            font-family: 'Courier New', Courier, monospace; /* Monospace font for ASCII */
+            white-space: pre; /* Preserve whitespace and newlines */
+            overflow-x: auto; /* Allow horizontal scrolling for wide art */
+            background-color: #1e1e1e; /* Dark background for ASCII */
+            color: #d4d4d4; /* Light gray text for ASCII */
+            padding: 15px;
+            border-radius: 8px; /* Rounded corners */
+            border: 1px solid #333; /* Dark border */
+            line-height: 1.0; /* Adjust for character density */
+            letter-spacing: 0px; /* Adjust for character density */
+            font-size: 8px; /* Can be small for detailed ASCII */
+            min-height: 100px;
+            text-align: left; /* Align text to the left for pre */
+        }
+
+        /* Message box for alerts */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #dc3545; /* Red for errors */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, top 0.5s ease-in-out;
+            visibility: hidden;
+        }
+
+        .message-box.show {
+            opacity: 1;
+            top: 30px; /* Slide down effect */
+            visibility: visible;
+        }
+        .message-box.success {
+            background-color: #28a745; /* Green for success */
+        }
+
+
+        /* Responsive adjustments */
+        @media (min-width: 600px) {
+            .controls {
+                flex-direction: row; /* Align controls in a row on larger screens */
+                align-items: flex-end; /* Align items to the bottom */
+                justify-content: space-between; /* Space out elements */
+            }
+            .control-group {
+                flex-grow: 1; /* Allow input groups to grow */
+            }
+            .control-group:last-of-type { /* The button group */
+                flex-grow: 0;
+            }
+            .controls button {
+                width: auto; /* Button width auto on larger screens */
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image to ASCII Art</h1>
+        <p>Made by Anderson de Lima Luiz</p>
+
+        <div id="pasteArea" contenteditable="true" class="paste-area" aria-placeholder="Paste your image here (Don't upload, use Ctrl+V)">
+            Paste your image here
+        </div>
+
+        <div class="controls-preview-wrapper">
+            <div class="image-preview-container" id="imagePreviewContainer" style="display:none;">
+                <p>Pasted Image Preview:</p>
+                <img id="pastedImage" src="#" alt="Pasted Image" style="display:none;">
+                <canvas id="imageCanvas" style="display:none;"></canvas>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="resolutionInput">ASCII Width (characters):</label>
+                    <input type="number" id="resolutionInput" value="100" min="10" max="500" step="10">
+                </div>
+                <div class="control-group">
+                    <label for="charSetSelect">Character Set:</label>
+                    <select id="charSetSelect">
+                        <option value="complex">Detailed: $@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~&lt;&gt;i!lI;:,"^'.`</option>
+                        <option value="simple">Simple: .:-=+*#%@</option>
+                        <option value="blocks">Blocks: █▇▆▅▄▃▂ </option>
+                        <option value="binary">Binary: 10</option>
+                    </select>
+                </div>
+                 <div class="control-group">
+                    <label for="invertColorsCheckbox">Invert Colors:</label>
+                    <input type="checkbox" id="invertColorsCheckbox" style="width: auto; height: auto; margin-top: 5px;">
+                </div>
+                <button id="convertToAsciiButton" aria-label="Convert to ASCII">Convert to ASCII</button>
+            </div>
+        </div>
+
+        <div class="output-container" id="outputContainer" style="display:none;">
+            <p>Generated ASCII Art:</p>
+            <pre id="asciiOutput"></pre>
+        </div>
+    </div>
+
+    <div id="customAlertBox" class="message-box"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Element References
+            const pasteArea = document.getElementById('pasteArea');
+            const pastedImage = document.getElementById('pastedImage');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imageCanvas = document.getElementById('imageCanvas');
+            // Get 2D context, willReadFrequently hint can improve performance for repeated getImageData calls
+            const canvasContext = imageCanvas.getContext('2d', { willReadFrequently: true });
+            const asciiOutput = document.getElementById('asciiOutput');
+            const outputContainer = document.getElementById('outputContainer');
+            const convertToAsciiButton = document.getElementById('convertToAsciiButton');
+            const resolutionInput = document.getElementById('resolutionInput');
+            const charSetSelect = document.getElementById('charSetSelect');
+            const invertColorsCheckbox = document.getElementById('invertColorsCheckbox');
+            const customAlertBox = document.getElementById('customAlertBox');
+
+            // ASCII Character Ramps: Define different sets of characters for ASCII conversion
+            // These are defined from visually lightest to visually darkest representation.
+            const charRamps = {
+                complex:    `$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^'.\` `.split("").reverse().join(""),
+                simple:     ` .:-=+*#%@`.split("").reverse().join(""),
+                blocks:     ` █▇▆▅▄▃▂ `.split("").reverse().join(""), // Space is lightest, full block is darkest
+                binary:     ` 01` // Space, 0, then 1
+            };
+            let currentAsciiChars = charRamps.complex; // Default character set
+
+            // --- Utility Functions ---
+            /**
+             * Displays a custom message (alert) to the user.
+             * @param {string} message - The message to display.
+             * @param {string} type - 'error' or 'success' to style the message box.
+             */
+            function showMessage(message, type = 'error') {
+                customAlertBox.textContent = message;
+                customAlertBox.className = 'message-box'; // Reset classes
+                customAlertBox.classList.add(type);
+                customAlertBox.classList.add('show');
+                // Hide the message box after 3 seconds
+                setTimeout(() => {
+                    customAlertBox.classList.remove('show');
+                }, 3000);
+            }
+
+            // --- Event Listeners ---
+            pasteArea.addEventListener('paste', handlePaste);
+            // Add focus visible class for accessibility styling if needed (not strictly used here)
+            pasteArea.addEventListener('focus', () => pasteArea.classList.add('focus-visible'));
+            pasteArea.addEventListener('blur', () => pasteArea.classList.remove('focus-visible'));
+
+            convertToAsciiButton.addEventListener('click', processImageToAscii);
+            charSetSelect.addEventListener('change', updateCharSet);
+
+            updateCharSet(); // Initialize the character set on load
+
+            // --- Core Functions ---
+
+            /**
+             * Updates the current ASCII character set based on user selection.
+             */
+            function updateCharSet() {
+                const selectedSet = charSetSelect.value;
+                currentAsciiChars = charRamps[selectedSet];
+            }
+
+            /**
+             * Handles the paste event to get image data from the clipboard.
+             * @param {ClipboardEvent} event - The paste event.
+             */
+            function handlePaste(event) {
+                // Immediately prevent the default paste action (e.g., pasting rich text or filename)
+                // into the contenteditable div. We want to handle the data ourselves.
+                event.preventDefault();
+
+                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                let imageFile = null;
+
+                // Check if clipboard items are accessible
+                if (!items) {
+                    showMessage('Clipboard data is not accessible.', 'error');
+                    pasteArea.innerHTML = 'Could not access clipboard. Try again or check browser permissions.';
+                    pasteArea.classList.remove('pasted');
+                    return;
+                }
+
+                // Iterate through clipboard items to find an image
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) { // Ensure getAsFile() returned a non-null File object
+                           imageFile = file;
+                           break; // Found an image file
+                        }
+                    }
+                }
+
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Display the pasted image
+                        pastedImage.src = e.target.result;
+                        pastedImage.style.display = 'block';
+                        imagePreviewContainer.style.display = 'block';
+                        
+                        // Clear the paste area and provide feedback
+                        pasteArea.innerHTML = 'Image pasted! Adjust settings and click "Convert".';
+                        pasteArea.classList.add('pasted');
+                        
+                        outputContainer.style.display = 'none'; // Hide previous results
+                        asciiOutput.textContent = ''; // Clear previous ASCII art
+                        showMessage('Image successfully pasted and ready for conversion.', 'success');
+                    };
+                    reader.onerror = function() {
+                        showMessage('Error: Could not read the pasted image file. It might be corrupted or an unsupported format.', 'error');
+                        pasteArea.innerHTML = 'Error reading image. Please try pasting a different image.';
+                        pasteArea.classList.remove('pasted');
+                        // Hide image preview elements on error
+                        pastedImage.style.display = 'none';
+                        pastedImage.src = "#"; // Reset src
+                        imagePreviewContainer.style.display = 'none';
+                    };
+                    reader.readAsDataURL(imageFile); // Read the image file as a data URL
+                } else {
+                    // No image file was successfully retrieved from clipboard items
+                    showMessage('No image found in the clipboard. Please copy an image and then paste it here.', 'error');
+                    pasteArea.innerHTML = 'No image detected in paste. Copy an image first, then paste here.';
+                    pasteArea.classList.remove('pasted');
+                    // Optionally hide preview if a previous image was there and this paste failed
+                    // pastedImage.style.display = 'none';
+                    // pastedImage.src = "#";
+                    // imagePreviewContainer.style.display = 'none';
+                }
+            }
+
+            /**
+             * Processes the pasted image and converts it to ASCII art.
+             */
+            function processImageToAscii() {
+                // Check if an image has been pasted and is visible
+                if (!pastedImage.src || pastedImage.src.startsWith('#') || pastedImage.style.display === 'none') {
+                    showMessage('Please paste an image first.', 'error');
+                    return;
+                }
+
+                const desiredWidth = parseInt(resolutionInput.value, 10);
+                // Validate the resolution input
+                if (isNaN(desiredWidth) || desiredWidth < 10 || desiredWidth > 1000) { // Max width increased in previous thought, keep it
+                    showMessage('Please enter a valid resolution (10-1000).', 'error');
+                    return;
+                }
+
+                const img = new Image();
+                img.onload = () => {
+                    // Character aspect ratio adjustment.
+                    const charAspectRatio = 0.55;
+
+                    const naturalAspectRatio = img.naturalHeight / img.naturalWidth;
+                    const desiredHeight = Math.round(desiredWidth * naturalAspectRatio * charAspectRatio);
+
+                    if (desiredHeight <= 0) {
+                        showMessage('Calculated height is too small. Try a larger width or a different image.', 'error');
+                        return;
+                    }
+
+                    imageCanvas.width = desiredWidth;
+                    imageCanvas.height = desiredHeight;
+
+                    // Clear the canvas and draw the scaled-down image
+                    canvasContext.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+                    canvasContext.drawImage(img, 0, 0, imageCanvas.width, imageCanvas.height);
+
+                    try {
+                        // Get pixel data from the canvas
+                        const imageData = canvasContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+                        const data = imageData.data; // This is a flat array: [R,G,B,A, R,G,B,A, ...]
+                        let asciiString = "";
+                        const invert = invertColorsCheckbox.checked;
+
+                        // Iterate over the scaled image's "pixels" (sampling points)
+                        for (let y = 0; y < imageCanvas.height; y++) {
+                            for (let x = 0; x < imageCanvas.width; x++) {
+                                const index = (y * imageCanvas.width + x) * 4; // Calculate index in the flat pixel array
+                                const r = data[index];
+                                const g = data[index + 1];
+                                const b = data[index + 2];
+                                // const a = data[index + 3]; // Alpha channel, not used for brightness
+
+                                // Calculate grayscale brightness (Luminosity method)
+                                let brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+
+                                // Invert brightness if the checkbox is checked
+                                if (invert) {
+                                    brightness = 255 - brightness;
+                                }
+
+                                // Map brightness (0-255) to an index in the current ASCII character ramp
+                                const charIndex = Math.min(
+                                    Math.floor((brightness / 255) * currentAsciiChars.length),
+                                    currentAsciiChars.length - 1 // Ensure index is within bounds
+                                );
+                                asciiString += currentAsciiChars[charIndex];
+                            }
+                            asciiString += '\n'; // Add a newline character at the end of each row
+                        }
+                        asciiOutput.textContent = asciiString; // Display the generated ASCII string
+                        outputContainer.style.display = 'block'; // Show the output container
+                        showMessage('ASCII art generated successfully!', 'success');
+                    } catch (error) {
+                        // Handle potential errors from getImageData (e.g., tainted canvas)
+                        console.error("Error getting image data: ", error);
+                        showMessage(`Error processing image: ${error.message}. This can happen if the source image is tainted (e.g. from a different domain and loaded without CORS). Try a smaller image or one from your computer.`, 'error');
+                        outputContainer.style.display = 'none';
+                    }
+                };
+                img.onerror = () => {
+                    // Handle errors if the image itself fails to load
+                    showMessage('Error loading the pasted image for processing. It might be an invalid image format or too large.', 'error');
+                    pastedImage.style.display = 'none';
+                    pastedImage.src = "#"; // Reset src
+                    imagePreviewContainer.style.display = 'none';
+                    pasteArea.innerHTML = 'Error loading image. Paste a new one.';
+                    pasteArea.classList.remove('pasted');
+                }
+                // Set the source of the Image object to the Data URL of the pasted image.
+                img.src = pastedImage.src;
+            }
+        });
+    </script>
+</body>
+</html>
+
